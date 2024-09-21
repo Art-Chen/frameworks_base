@@ -19,6 +19,7 @@ package com.android.systemui.biometrics
 import android.annotation.SuppressLint
 import android.annotation.UiThread
 import android.content.Context
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.hardware.biometrics.BiometricRequestConstants.REASON_AUTH_BP
@@ -235,6 +236,7 @@ class UdfpsControllerOverlay @JvmOverloads constructor(
     /** Show the overlay or return false and do nothing if it is already showing. */
     @SuppressLint("ClickableViewAccessibility")
     fun show(controller: UdfpsController, params: UdfpsOverlayParams): Boolean {
+        Log.i(TAG, "show")
         if (getTouchOverlay() == null) {
             overlayParams = params
             sensorBounds = Rect(params.sensorBounds)
@@ -461,6 +463,8 @@ class UdfpsControllerOverlay @JvmOverloads constructor(
     fun hide(): Boolean {
         val wasShowing = isShowing
         hideOnUndim = isDimmed
+
+        Log.i(TAG, "hide")
 
         overlayViewLegacy?.apply {
             if (isDisplayConfigured) {

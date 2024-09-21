@@ -909,6 +909,11 @@ public class UdfpsController implements DozeReceiver, Dumpable {
             if (mUdfpsDisplayMode != null) {
                 mUdfpsDisplayMode.disable(null);
             }
+
+            UdfpsSurfaceView gHbmView = view.findViewById(com.android.systemui.R.id.hbm_view);
+            if (gHbmView != null) {
+                gHbmView.onFingerUp();
+            }
         } else {
             if (view != null) {
                 UdfpsView udfpsView = (UdfpsView) view;
@@ -1164,7 +1169,16 @@ public class UdfpsController implements DozeReceiver, Dumpable {
                 dispatchOnUiReady(requestId);
             } else {
                 if (DeviceEntryUdfpsRefactor.isEnabled()) {
-                    mUdfpsDisplayMode.enable(() -> dispatchOnUiReady(requestId));
+                    // UdfpsDisplayMode can not get sensor rect. we move ui ready trigger to UdfpsSurfaceView.
+                    UdfpsSurfaceView gHbmView = view.findViewById(com.android.systemui.R.id.hbm_view);
+                    if (gHbmView != null) {
+                        mUdfpsDisplayMode.enable(null);
+                        gHbmView.setEnrolling((mOverlay.getRequestReason() == REASON_ENROLL_ENROLLING) ||
+                                (mOverlay.getRequestReason() == REASON_ENROLL_FIND_SENSOR));
+                        gHbmView.onFingerDown(mOverlayParams.getSensorBounds(), () -> dispatchOnUiReady(requestId));
+                    } else {
+                        mUdfpsDisplayMode.enable(() -> dispatchOnUiReady(requestId));
+                    }
                 } else {
                     ((UdfpsView) view).configureDisplay(() -> dispatchOnUiReady(requestId));
                 }

@@ -19,6 +19,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -26,6 +27,7 @@ import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.View
 import com.android.systemui.R
 
 /**
@@ -54,6 +56,7 @@ class UdfpsSurfaceView(context: Context, attrs: AttributeSet?) : SurfaceView(con
     private var mHasValidSurface = false
     private var mEnrolling = false
     private val mUdfpsIconPressed: Drawable?
+    private var fpDownRunnable: Runnable? = null
 
     init {
 
@@ -79,6 +82,9 @@ class UdfpsSurfaceView(context: Context, attrs: AttributeSet?) : SurfaceView(con
             mOnIlluminatedRunnable = null
             mAwaitingSurfaceToStartIllumination = false
         }
+
+        fpDownRunnable?.run()
+        fpDownRunnable = null
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
@@ -157,5 +163,25 @@ class UdfpsSurfaceView(context: Context, attrs: AttributeSet?) : SurfaceView(con
 
     fun setEnrolling(enrolling: Boolean) {
         mEnrolling = enrolling
+    }
+
+    // triggered when enabled feature flag "Device Entry Udfps Refactor" (Default enabled)
+    fun onFingerDown(sensorRect: Rect, uiReadyRunnable: Runnable) {
+        this.visibility = View.VISIBLE
+        if (mHasValidSurface) {
+            drawIlluminationDot(RectF(sensorRect))
+            uiReadyRunnable.run()
+            return
+        }
+
+        fpDownRunnable = Runnable {
+            drawIlluminationDot(RectF(sensorRect))
+            uiReadyRunnable.run()
+        }
+    }
+
+    fun onFingerUp() {
+        fpDownRunnable = null
+        this.visibility = View.INVISIBLE
     }
 }
